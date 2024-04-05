@@ -8,15 +8,15 @@ X = [r("██   ██"), r(" ██ ██ "), r("  ███  "), r(" ██ 
 B = ["       ", "       ", "       ", "       ", "       "]
 CLEAR = "cls" if os.name == "nt" else "clear"
 
-def display_row(_l: list, box_number: int):
+def display_row(row: list, box_num: int):
     for i in range(5):
         if not i:
             print(
-                f"{g(box_number)} {_l[0][i]}  |"+
-                f"{g(box_number+1)} {_l[1][i]}  |"+
-                f"{g(box_number+2)} {_l[2][i]}")
+                f"{g(box_num)} {row[0][i]}  |"+
+                f"{g(box_num+1)} {row[1][i]}  |"+
+                f"{g(box_num+2)} {row[2][i]}")
         else:
-            print(f"  {_l[0][i]}  |  {_l[1][i]}  |  {_l[2][i]}")
+            print(f"  {row[0][i]}  |  {row[1][i]}  |  {row[2][i]}")
 
 def display_board(board: list):
     print('')
@@ -40,16 +40,15 @@ def is_winner(board: list):
         [0,4,8], [6,4,2]
     ]
     for combo in win_combos:
-        id1, id2, id3 = combo
-        if board[id1] == X and board[id2] == X and board[id3] == X:
+        if len([board[i] for i in combo if board[i] == X]) == 3:
             return "X"
-        elif board[id1] == O and board[id2] == O and board[id3] == O:
+        if len([board[i] for i in combo if board[i] == O]) == 3:
             return "O"
     return False
 
 def find_best_move(board: list):
     valid_choices = [idx for idx, val in enumerate(board) if val == B]
-    
+
     for choice in valid_choices:
         temp = deepcopy(board)
         temp[choice] = O
@@ -67,10 +66,13 @@ def find_best_move(board: list):
     choice = random.choice(valid_choices)
     return choice
 
-def play_round(board: list, player: str):
+def play_round(board: list, player: str, difficulty="Easy"):
     valid_choices = [idx for idx, val in enumerate(board) if val == B]
     if player[0] == O:
-        choice = find_best_move(board)
+        if difficulty == "Easy":
+            choice = random.choice(valid_choices)
+        elif difficulty == "Medium":
+            choice = find_best_move(board)
         board[choice] = player[0]
         player[0] = X
     else:
@@ -88,13 +90,13 @@ def is_game_done(board: list):
     if winner:
         print(f"{winner} has won the game!")
         return True
-    
+
     if is_board_full(board):
         print("The game is a tie!")
         return True
 
 def play_again(game_number):
-    if game_number > 1:
+    if game_number > 0:
         answer = input("Play again? y/n: ")
         if answer != "y":
             print("Thanks for playing!")
@@ -102,7 +104,8 @@ def play_again(game_number):
     return True
 
 def play():
-    game_number = 1
+    game_number = 0
+    difficulty = "Medium"
     while play_again(game_number):
         os.system(CLEAR)
 
@@ -115,7 +118,7 @@ def play():
             if is_game_done(board):
                 break
 
-            play_round(board, player)
+            play_round(board, player, difficulty)
             os.system(CLEAR)
             display_board(board)
 
