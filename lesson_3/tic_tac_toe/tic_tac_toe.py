@@ -1,7 +1,18 @@
 import random
 import os
 from copy import deepcopy
-from color import b,r,g
+
+def b(text: str):
+    """returns string in blue"""
+    return f"\x1b[0;34;1m{text}\x1b[0m"
+
+def r(text: str):
+    """returns string in red"""
+    return f"\x1b[0;31;1m{text}\x1b[0m"
+
+def g(text: str):
+    """returns string in green"""
+    return f"\x1b[0;32;1m{text}\x1b[0m"
 
 O = [b(" █████ "), b("██   ██"), b("██   ██"), b("██   ██"), b(" █████ ")]
 X = [r("██   ██"), r(" ██ ██ "), r("  ███  "), r(" ██ ██ "), r("██   ██")]
@@ -27,71 +38,85 @@ def display_board(board: list):
     display_row([board[6], board[7], board[8]], 7)
     print('')
 
+def join_or(choices: list, sep: str = ", ", end="or"):
+    match len(choices):
+        case 0:
+            return ""
+        case 1:
+            return f"Valid choice: {g(choices[0]+1)}"
+        case _:
+            return f"Valid choices: {sep.join(g(str(num+1)) for num in choices[:-1])}{sep}{end} {g(choices[-1]+1)}"
+
 def init_board():
     return [B for _ in range(9)]
 
 def is_board_full(board: list):
     return not board.count(B)
 
-def is_winner(board: list):
+def get_winner(board: list):
     win_combos = [
         [0,1,2], [3,4,5], [6,7,8],
         [0,3,6], [1,4,7], [2,5,8],
         [0,4,8], [6,4,2]
     ]
     for combo in win_combos:
-        if len([board[i] for i in combo if board[i] == X]) == 3:
+        if all(board[i] == X for i in combo if board[i]):
             return "X"
-        if len([board[i] for i in combo if board[i] == O]) == 3:
+        if all(board[i] == O for i in combo if board[i]):
             return "O"
     return False
 
+def get_valid_choices(board: list):
+    return [idx for idx, val in enumerate(board) if val == B]
+
 def find_best_move(board: list):
-    valid_choices = [idx for idx, val in enumerate(board) if val == B]
+    valid_choices = get_valid_choices(board)
 
     for choice in valid_choices:
-        temp = deepcopy(board)
-        temp[choice] = O
-        if is_winner(temp) == "O":
+        test_board = deepcopy(board)
+        test_board[choice] = O
+        if get_winner(test_board) == "O":
             return choice
 
     for choice in valid_choices:
-        temp = deepcopy(board)
-        temp[choice] = X
-        if is_winner(temp) == "X":
+        test_board = deepcopy(board)
+        test_board[choice] = X
+        if get_winner(test_board) == "X":
             return choice
 
     if 4 in valid_choices:
         return 4
+
     choice = random.choice(valid_choices)
     return choice
 
-def play_round(board: list, player: str, difficulty="Easy"):
-    valid_choices = [idx for idx, val in enumerate(board) if val == B]
-    if player[0] == O:
-        if difficulty == "Easy":
+def play_round(state: dict):
+    valid_choices = get_valid_choices(state["board"])
+    if state["player"] == O:
+        if state["difficulty"] == "easy":
             choice = random.choice(valid_choices)
-        elif difficulty == "Medium":
-            choice = find_best_move(board)
-        board[choice] = player[0]
-        player[0] = X
+        elif state["difficulty"] == "medium":
+            choice = find_best_move(state["board"])
+        state["board"][choice] = state["player"]
+        state["player"] = X
     else:
         while True:
-            print("valid choices: ", ", ".join(g(str(num+1)) for num in valid_choices))
+            print(join_or(valid_choices))
             choice = int(input("Choose an empty square: "))-1
             if choice in valid_choices:
-                board[choice] = player[0]
-                player[0] = O
+                state["board"][choice] = state["player"]
+                state["player"] = O
                 break
             print("That is not a valid choice, please try again")
 
-def is_game_done(board: list):
-    winner = is_winner(board)
+def is_game_done(state: dict):
+    winner = get_winner(state["board"])
     if winner:
         print(f"{winner} has won the game!")
+        state[f"{"x" if winner == "X" else "o"}_wins"] += 1
         return True
 
-    if is_board_full(board):
+    if is_board_full(state["board"]):
         print("The game is a tie!")
         return True
 
@@ -104,26 +129,32 @@ def play_again(game_number):
     return True
 
 def play():
-    game_number = 0
-    difficulty = "Medium"
-    while play_again(game_number):
+    state = {
+        "difficulty": "medium",
+        "board": [],
+        "player": X,
+        "game_number": 0,
+        "x_wins": 0,
+        "o_wins": 0
+    }
+
+    while play_again(state["game_number"]):
+
         os.system(CLEAR)
+        state["board"] = init_board()
+        display_board(state["board"])
 
-        board = init_board()
-        player = [X]
+        while not is_game_done(state):
 
-        display_board(board)
-
-        while True:
-            if is_game_done(board):
-                break
-
-            play_round(board, player, difficulty)
+            play_round(state)
             os.system(CLEAR)
-            display_board(board)
+            display_board(state["board"])
 
-        game_number += 1
-    print(f"You played {game_number} games!")
+        state["game_number"] += 1
+
+    print(f"You played {state["game_number"]} games!")
+    print(f"You won {state["x_wins"]} games!")
+    print(f"Computer won {state["o_wins"]} games!")
 
 
 play()
