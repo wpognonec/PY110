@@ -19,6 +19,12 @@ X = [r("██   ██"), r(" ██ ██ "), r("  ███  "), r(" ██ 
 B = ["       ", "       ", "       ", "       ", "       "]
 CLEAR = "cls" if os.name == "nt" else "clear"
 
+def msg(message: str, user_input=False):
+    if user_input:
+        return input("==> " + message)
+    print("==> " + message)
+
+
 def display_row(row: list, box_num: int):
     for i in range(5):
         if not i:
@@ -45,7 +51,8 @@ def join_or(choices: list, sep: str = ", ", end="or"):
         case 1:
             return f"Valid choice: {g(choices[0]+1)}"
         case _:
-            return f"Valid choices: {sep.join(g(str(num+1)) for num in choices[:-1])}{sep}{end} {g(choices[-1]+1)}"
+            joined = sep.join(g(str(num+1)) for num in choices[:-1])
+            return f"Valid choices: {joined}{sep}{end} {g(choices[-1]+1)}"
 
 def init_board():
     return [B for _ in range(9)]
@@ -101,32 +108,46 @@ def play_round(state: dict):
         state["player"] = X
     else:
         while True:
-            print(join_or(valid_choices))
-            choice = int(input("Choose an empty square: "))-1
+            msg(join_or(valid_choices))
+            choice = int(msg("Choose an empty square: ", user_input=True))-1
             if choice in valid_choices:
                 state["board"][choice] = state["player"]
                 state["player"] = O
                 break
-            print("That is not a valid choice, please try again")
+            msg("That is not a valid choice, please try again")
 
 def is_game_done(state: dict):
     winner = get_winner(state["board"])
     if winner:
-        print(f"{winner} has won the game!")
+        msg(f"{winner} has won the game!")
         state[f"{"x" if winner == "X" else "o"}_wins"] += 1
         return True
 
     if is_board_full(state["board"]):
-        print("The game is a tie!")
+        msg("The game is a tie!")
         return True
 
 def play_again(game_number):
     if game_number > 0:
-        answer = input("Play again? y/n: ")
+        answer = msg("Play again? y/n: ", user_input=True)
         if answer != "y":
-            print("Thanks for playing!")
+            msg("Thanks for playing!")
             return False
     return True
+
+def get_difficulty():
+    while True:
+        choice = msg(
+            "What difficulty would you like? (E)asy / (M)edium: " ,
+            user_input=True
+            )
+        match choice.lower():
+            case "e" | "easy":
+                return "easy"
+            case "m" | "medium":
+                return "medium"
+        msg("That was not a valid choice.")
+
 
 def play():
     state = {
@@ -137,6 +158,8 @@ def play():
         "x_wins": 0,
         "o_wins": 0
     }
+
+    state["difficulty"] = get_difficulty()
 
     while play_again(state["game_number"]):
 
@@ -152,9 +175,9 @@ def play():
 
         state["game_number"] += 1
 
-    print(f"You played {state["game_number"]} games!")
-    print(f"You won {state["x_wins"]} games!")
-    print(f"Computer won {state["o_wins"]} games!")
+    msg(f"You played {state["game_number"]} games!")
+    msg(f"You won {state["x_wins"]} games!")
+    msg(f"Computer won {state["o_wins"]} games!")
 
 
 play()
