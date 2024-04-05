@@ -22,7 +22,7 @@ CLEAR = "cls" if os.name == "nt" else "clear"
 def msg(message: str, user_input=False):
     if user_input:
         return input("==> " + message)
-    print("==> " + message)
+    return print("==> " + message)
 
 
 def display_row(row: list, box_num: int):
@@ -126,6 +126,8 @@ def is_game_done(state: dict):
     if is_board_full(state["board"]):
         msg("The game is a tie!")
         return True
+
+    return False
 
 def play_again(game_number):
     if game_number > 0:
