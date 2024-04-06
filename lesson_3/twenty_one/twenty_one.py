@@ -37,7 +37,7 @@ def total_cards(cards: list):
         elif card[1] == "A":
             aces += 1
     for _ in range(aces):
-        if total < 12:
+        if total < 12 - aces:
             total += 11
         else:
             total += 1
