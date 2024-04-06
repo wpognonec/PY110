@@ -29,18 +29,18 @@ def display_row(row: list, box_num: int):
     for i in range(5):
         if not i:
             print(
-                f"{g(box_num)} {row[0][i]}  |"+
-                f"{g(box_num+1)} {row[1][i]}  |"+
+                f"{g(box_num)} {row[0][i]}  │"+
+                f"{g(box_num+1)} {row[1][i]}  │"+
                 f"{g(box_num+2)} {row[2][i]}")
         else:
-            print(f"  {row[0][i]}  |  {row[1][i]}  |  {row[2][i]}")
+            print(f"  {row[0][i]}  │  {row[1][i]}  │  {row[2][i]}")
 
 def display_board(board: list):
     print('')
     display_row([board[0], board[1], board[2]], 1)
-    print("-----------+-----------+-----------")
+    print("───────────┼───────────┼───────────")
     display_row([board[3], board[4], board[5]], 4)
-    print("-----------+-----------+-----------")
+    print("───────────┼───────────┼───────────")
     display_row([board[6], board[7], board[8]], 7)
     print('')
 
