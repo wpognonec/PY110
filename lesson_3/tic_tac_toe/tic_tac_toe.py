@@ -1,6 +1,5 @@
 import random
 import os
-from copy import deepcopy
 
 def b(text: str):
     """returns string in blue"""
@@ -14,16 +13,28 @@ def g(text: str):
     """returns string in green"""
     return f"\x1b[0;32;1m{text}\x1b[0m"
 
-O = [b(" █████ "), b("██   ██"), b("██   ██"), b("██   ██"), b(" █████ ")]
-X = [r("██   ██"), r(" ██ ██ "), r("  ███  "), r(" ██ ██ "), r("██   ██")]
-B = ["       ", "       ", "       ", "       ", "       "]
+O, X, B = 1, -1, 0
+ASCII = {
+    1: [b(" █████ "),
+        b("██   ██"),
+        b("██   ██"),
+        b("██   ██"),
+        b(" █████ ")],
+
+    -1: [r("██   ██"),
+         r(" ██ ██ "),
+         r("  ███  "),
+         r(" ██ ██ "),
+         r("██   ██")],
+
+    0: [" " * 7 for _ in range(7)]
+}
 CLEAR = "cls" if os.name == "nt" else "clear"
 
 def msg(message: str, user_input=False):
     if user_input:
         return input("==> " + message)
     return print("==> " + message)
-
 
 def display_row(row: list, box_num: int):
     for i in range(5):
@@ -37,11 +48,11 @@ def display_row(row: list, box_num: int):
 
 def display_board(board: list):
     print('')
-    display_row([board[0], board[1], board[2]], 1)
+    display_row([ASCII[board[0]], ASCII[board[1]], ASCII[board[2]]], 1)
     print("───────────┼───────────┼───────────")
-    display_row([board[3], board[4], board[5]], 4)
+    display_row([ASCII[board[3]], ASCII[board[4]], ASCII[board[5]]], 4)
     print("───────────┼───────────┼───────────")
-    display_row([board[6], board[7], board[8]], 7)
+    display_row([ASCII[board[6]], ASCII[board[7]], ASCII[board[8]]], 7)
     print('')
 
 def join_or(choices: list, sep: str = ", ", end="or"):
@@ -67,29 +78,67 @@ def get_winner(board: list):
         [0,4,8], [6,4,2]
     ]
     for combo in win_combos:
-        if all(board[i] == X for i in combo if board[i]):
-            return "X"
-        if all(board[i] == O for i in combo if board[i]):
-            return "O"
+        if all(board[i] == X for i in combo):
+            return X
+        if all(board[i] == O for i in combo):
+            return O
     return False
 
 def get_valid_choices(board: list):
     return [idx for idx, val in enumerate(board) if val == B]
 
-def find_best_move(board: list):
+def minimax(board, depth, player):
+
+    if player == O:
+        best = [-1, +10]
+    else:
+        best = [-1, -10]
+
+    if depth == 9:
+        return best
+
+    winner = get_winner(board)
+    if depth == 0 or (is_board_full(board) or winner):
+        if winner == X:
+            score = 1
+        elif winner == O:
+            score = -1
+        else:
+            score = 0
+        return [-1, score]
+
+    for choice in get_valid_choices(board):
+        board[choice] = player
+        score = minimax(board, depth - 1, X if player == O else O)
+        board[choice] = B
+        score[0] = choice
+
+        if player == O:
+            if score[1] < best[1]:
+                best = score
+        else:
+            if score[1] > best[1]:
+                best = score
+
+    return best
+
+def find_easy_move(valid_choices: list):
+    return random.choice(valid_choices)
+
+def find_medium_move(board: list):
     valid_choices = get_valid_choices(board)
 
     for choice in valid_choices:
-        test_board = deepcopy(board)
-        test_board[choice] = O
-        if get_winner(test_board) == "O":
+        board[choice] = O
+        if get_winner(board) == O:
             return choice
+        board[choice] = B
 
     for choice in valid_choices:
-        test_board = deepcopy(board)
-        test_board[choice] = X
-        if get_winner(test_board) == "X":
+        board[choice] = X
+        if get_winner(board) == X:
             return choice
+        board[choice] = B
 
     if 4 in valid_choices:
         return 4
@@ -97,13 +146,20 @@ def find_best_move(board: list):
     choice = random.choice(valid_choices)
     return choice
 
+def find_hard_move(board: list, depth):
+    return minimax(board, depth, O)[0]
+
 def play_round(state: dict):
     valid_choices = get_valid_choices(state["board"])
     if state["player"] == O:
-        if state["difficulty"] == "easy":
-            choice = random.choice(valid_choices)
-        elif state["difficulty"] == "medium":
-            choice = find_best_move(state["board"])
+        match state["difficulty"]:
+            case "easy":
+                choice = find_easy_move(valid_choices)
+            case "medium":
+                choice = find_medium_move(state["board"])
+            case "hard":
+                choice = find_hard_move(state["board"], len(valid_choices))
+
         state["board"][choice] = state["player"]
         state["player"] = X
     else:
@@ -119,8 +175,9 @@ def play_round(state: dict):
 def is_game_done(state: dict):
     winner = get_winner(state["board"])
     if winner:
-        msg(f"{winner} has won the game!")
-        state[f"{"x" if winner == "X" else "o"}_wins"] += 1
+        sym = "X" if winner == X else "O"
+        msg(f"{sym} has won the game!")
+        state[f"{"x" if winner == X else "o"}_wins"] += 1
         return True
 
     if is_board_full(state["board"]):
@@ -130,28 +187,43 @@ def is_game_done(state: dict):
     return False
 
 def play_again(game_number):
-    if game_number > 0:
-        answer = msg("Play again? y/n: ", user_input=True)
-        if answer != "y":
+    while game_number > 0:
+        msg("Play again?")
+        msg(f"{g(1)}: Yes")
+        msg(f"{g(2)}: No")
+        answer = msg("", user_input=True)
+        if answer == "2":
             msg("Thanks for playing!")
             return False
+        if answer == "1":
+            return True
+        msg("Wrong input, please enter 1 or 2")
     return True
 
 def get_difficulty():
     while True:
-        choice = msg(
-            "What difficulty would you like? (E)asy / (M)edium: " ,
+        msg(f"{g(1)}: Easy")
+        msg(f"{g(2)}: Medium")
+        msg(f"{g(3)}: Hard")
+        choice = msg("Please choose the game difficulty: " ,
             user_input=True
             )
         match choice.lower():
-            case "e" | "easy":
+            case "1" | "easy":
                 return "easy"
-            case "m" | "medium":
+            case "2" | "medium":
                 return "medium"
+            case "3" | "hard":
+                return "hard"
         msg("That was not a valid choice.")
 
+def display_stats(state: dict):
+    os.system(CLEAR)
+    msg(f"You played {state["game_number"]} games!")
+    msg(f"You won {state["x_wins"]} games!")
+    msg(f"Computer won {state["o_wins"]} games!")
 
-def play():
+def init_state():
     state = {
         "difficulty": "medium",
         "board": [],
@@ -160,8 +232,12 @@ def play():
         "x_wins": 0,
         "o_wins": 0
     }
-
     state["difficulty"] = get_difficulty()
+    return state
+
+def play():
+    os.system(CLEAR)
+    state = init_state()
 
     while play_again(state["game_number"]):
 
@@ -177,9 +253,6 @@ def play():
 
         state["game_number"] += 1
 
-    msg(f"You played {state["game_number"]} games!")
-    msg(f"You won {state["x_wins"]} games!")
-    msg(f"Computer won {state["o_wins"]} games!")
-
+    display_stats(state)
 
 play()
