@@ -56,9 +56,27 @@ def display_board(board: list):
     display_row([ASCII[board[i]] for i in range (6,9)], 7)
     print('')
 
-def init_board():
-    """returns an empty board"""
-    return [B for _ in range(9)]
+def display_stats(state: dict):
+    """displays the wins and losses at the end of the match"""
+    os.system(CLEAR)
+    msg(f"You played {state["game_number"]} games!")
+    msg(f"You won {state["x_wins"]} games!")
+    msg(f"Computer won {state["o_wins"]} games!")
+
+def is_game_done(state: dict):
+    """returns True if the game is done, False otherwise"""
+    winner = get_winner(state["board"])
+    if winner:
+        sym = "X" if winner == X else "O"
+        msg(f"{sym} has won the game!")
+        state[f"{"x" if winner == X else "o"}_wins"] += 1
+        return True
+
+    if is_board_full(state["board"]):
+        msg("The game is a tie!")
+        return True
+
+    return False
 
 def is_board_full(board: list):
     """returns True if board is full, False otherwise"""
@@ -94,7 +112,7 @@ def get_valid_choices(board: list):
     return [idx for idx, val in enumerate(board) if val == B]
 
 def minimax(board, depth, player):
-    """returns the best possible move using minimax algorithm"""
+    """finds the best possible move using minimax algorithm"""
     best = [-1, -10 * player]
 
     if depth == 9:
@@ -154,8 +172,8 @@ def get_player_choice(valid_choices: list, board: list):
     while True:
         msg(join_or(valid_choices))
         choice = input("==> Choose an empty square: ")
-        if choice.isdigit() and int(choice) in valid_choices:
-            return int(choice)-1
+        if choice.isdigit() and int(choice) - 1 in valid_choices:
+            return int(choice) - 1
         os.system(CLEAR)
         display_board(board)
         msg("That is not a valid choice, please try again")
@@ -170,50 +188,6 @@ def get_computer_choice(valid_choices: list, state: dict):
         case "hard":
             choice = get_hard_move(state["board"], len(valid_choices))
     return choice
-
-def play_round(state: dict):
-    """plays a round of tic tac toe"""
-    valid_choices = get_valid_choices(state["board"])
-    if state["player"] == O:
-        choice = get_computer_choice(valid_choices, state)
-        state["board"][choice] = state["player"]
-        state["player"] = X
-    else:
-        choice = get_player_choice(valid_choices, state["board"])
-        state["board"][choice] = state["player"]
-        state["player"] = O
-
-def is_game_done(state: dict):
-    """returns True if the game is done, False otherwise"""
-    winner = get_winner(state["board"])
-    if winner:
-        sym = "X" if winner == X else "O"
-        msg(f"{sym} has won the game!")
-        state[f"{"x" if winner == X else "o"}_wins"] += 1
-        return True
-
-    if is_board_full(state["board"]):
-        msg("The game is a tie!")
-        return True
-
-    return False
-
-def play_again(state):
-    """returns True is user wants to play again, False otherwise"""
-    while state["game_number"] > 0:
-        msg("Play again?")
-        msg(f"{g(1)}: Yes")
-        msg(f"{g(2)}: No")
-        answer = input("==> ")
-        if answer == "2":
-            msg("Thanks for playing!")
-            return False
-        if answer == "1":
-            return True
-        os.system(CLEAR)
-        display_board(state["board"])
-        msg("That was not a valid choice.")
-    return True
 
 def get_difficulty():
     """asks user for game difficulty"""
@@ -233,12 +207,38 @@ def get_difficulty():
         os.system(CLEAR)
         msg("That was not a valid choice.")
 
-def display_stats(state: dict):
-    """displays the wins and losses at the end of the match"""
-    os.system(CLEAR)
-    msg(f"You played {state["game_number"]} games!")
-    msg(f"You won {state["x_wins"]} games!")
-    msg(f"Computer won {state["o_wins"]} games!")
+def play_round(state: dict):
+    """plays a round of tic tac toe"""
+    valid_choices = get_valid_choices(state["board"])
+    if state["player"] == O:
+        choice = get_computer_choice(valid_choices, state)
+        state["board"][choice] = state["player"]
+        state["player"] = X
+    else:
+        choice = get_player_choice(valid_choices, state["board"])
+        state["board"][choice] = state["player"]
+        state["player"] = O
+
+def play_again(state):
+    """returns True is user wants to play again, False otherwise"""
+    while state["game_number"] > 0:
+        msg("Play again?")
+        msg(f"{g(1)}: Yes")
+        msg(f"{g(2)}: No")
+        answer = input("==> ")
+        if answer == "2":
+            msg("Thanks for playing!")
+            return False
+        if answer == "1":
+            return True
+        os.system(CLEAR)
+        display_board(state["board"])
+        msg("That was not a valid choice.")
+    return True
+
+def init_board():
+    """returns an empty board"""
+    return [B for _ in range(9)]
 
 def init_state():
     """initializes and returns the starting state of the game"""
@@ -252,7 +252,7 @@ def init_state():
     }
     return state
 
-def play():
+def main():
     """main game loop"""
     os.system(CLEAR)
     msg("Welcome to Tic Tac Toe")
@@ -273,4 +273,4 @@ def play():
 
     display_stats(state)
 
-play()
+main()
