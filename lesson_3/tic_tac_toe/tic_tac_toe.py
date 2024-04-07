@@ -149,31 +149,39 @@ def get_hard_move(board: list, depth):
     """returns a hard difficulty move"""
     return minimax(board, depth, O)[0]
 
+def get_player_choice(valid_choices: list, board: list):
+    """returns a move for the player"""
+    while True:
+        msg(join_or(valid_choices))
+        choice = input("==> Choose an empty square: ")
+        if choice.isdigit() and int(choice) in valid_choices:
+            return int(choice)-1
+        os.system(CLEAR)
+        display_board(board)
+        msg("That is not a valid choice, please try again")
+
+def get_computer_choice(valid_choices: list, state: dict):
+    """returns a move for the computer"""
+    match state["difficulty"]:
+        case "easy":
+            choice = get_easy_move(valid_choices)
+        case "medium":
+            choice = get_medium_move(state["board"])
+        case "hard":
+            choice = get_hard_move(state["board"], len(valid_choices))
+    return choice
+
 def play_round(state: dict):
     """plays a round of tic tac toe"""
     valid_choices = get_valid_choices(state["board"])
     if state["player"] == O:
-        match state["difficulty"]:
-            case "easy":
-                choice = get_easy_move(valid_choices)
-            case "medium":
-                choice = get_medium_move(state["board"])
-            case "hard":
-                choice = get_hard_move(state["board"], len(valid_choices))
-
+        choice = get_computer_choice(valid_choices, state)
         state["board"][choice] = state["player"]
         state["player"] = X
     else:
-        while True:
-            msg(join_or(valid_choices))
-            choice = int(input("==> Choose an empty square: "))-1
-            if choice in valid_choices:
-                state["board"][choice] = state["player"]
-                state["player"] = O
-                break
-            os.system(CLEAR)
-            display_board(state["board"])
-            msg("That is not a valid choice, please try again")
+        choice = get_player_choice(valid_choices, state["board"])
+        state["board"][choice] = state["player"]
+        state["player"] = O
 
 def is_game_done(state: dict):
     """returns True if the game is done, False otherwise"""
