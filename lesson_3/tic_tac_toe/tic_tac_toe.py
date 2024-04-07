@@ -32,9 +32,11 @@ ASCII = {
 CLEAR = "cls" if os.name == "nt" else "clear"
 
 def msg(message: str):
+    """formats print messages"""
     return print("==> " + message)
 
 def display_row(row: list, box_num: int):
+    """prints a single row of the board"""
     for i in range(5):
         if not i:
             print(
@@ -45,6 +47,7 @@ def display_row(row: list, box_num: int):
             print(f"  {row[0][i]}  │  {row[1][i]}  │  {row[2][i]}")
 
 def display_board(board: list):
+    """prints the whole board"""
     print('')
     display_row([ASCII[board[i]] for i in range (0,3)], 1)
     print("───────────┼───────────┼───────────")
@@ -54,12 +57,15 @@ def display_board(board: list):
     print('')
 
 def init_board():
+    """returns an empty board"""
     return [B for _ in range(9)]
 
 def is_board_full(board: list):
+    """returns True if board is full, False otherwise"""
     return not board.count(B)
 
 def join_or(choices: list, sep: str = ", ", end="or"):
+    """returns a formated string with the valid choices"""
     match len(choices):
         case 0:
             return ""
@@ -70,6 +76,7 @@ def join_or(choices: list, sep: str = ", ", end="or"):
             return f"Valid choices: {joined}{sep}{end} {g(choices[-1]+1)}"
 
 def get_winner(board: list):
+    """returns the winner or 0 if there is no winner"""
     win_combos = [
         [0,1,2], [3,4,5], [6,7,8],
         [0,3,6], [1,4,7], [2,5,8],
@@ -83,9 +90,11 @@ def get_winner(board: list):
     return 0
 
 def get_valid_choices(board: list):
+    """returns a list of valid moves to make on the board"""
     return [idx for idx, val in enumerate(board) if val == B]
 
 def minimax(board, depth, player):
+    """returns the best possible move using minimax algorithm"""
     best = [-1, -10 * player]
 
     if depth == 9:
@@ -111,9 +120,11 @@ def minimax(board, depth, player):
     return best
 
 def get_easy_move(valid_choices: list):
+    """returns an easy difficulty move"""
     return random.choice(valid_choices)
 
 def get_medium_move(board: list):
+    """returns a medium difficulty move"""
     valid_choices = get_valid_choices(board)
 
     for choice in valid_choices:
@@ -135,9 +146,11 @@ def get_medium_move(board: list):
     return choice
 
 def get_hard_move(board: list, depth):
+    """returns a hard difficulty move"""
     return minimax(board, depth, O)[0]
 
 def play_round(state: dict):
+    """plays a round of tic tac toe"""
     valid_choices = get_valid_choices(state["board"])
     if state["player"] == O:
         match state["difficulty"]:
@@ -163,6 +176,7 @@ def play_round(state: dict):
             msg("That is not a valid choice, please try again")
 
 def is_game_done(state: dict):
+    """returns True if the game is done, False otherwise"""
     winner = get_winner(state["board"])
     if winner:
         sym = "X" if winner == X else "O"
@@ -177,6 +191,7 @@ def is_game_done(state: dict):
     return False
 
 def play_again(state):
+    """returns True is user wants to play again, False otherwise"""
     while state["game_number"] > 0:
         msg("Play again?")
         msg(f"{g(1)}: Yes")
@@ -193,6 +208,7 @@ def play_again(state):
     return True
 
 def get_difficulty():
+    """asks user for game difficulty"""
     while True:
         diff = {
             "1": "easy",
@@ -210,12 +226,14 @@ def get_difficulty():
         msg("That was not a valid choice.")
 
 def display_stats(state: dict):
+    """displays the wins and losses at the end of the match"""
     os.system(CLEAR)
     msg(f"You played {state["game_number"]} games!")
     msg(f"You won {state["x_wins"]} games!")
     msg(f"Computer won {state["o_wins"]} games!")
 
 def init_state():
+    """initializes and returns the starting state of the game"""
     state = {
         "difficulty": get_difficulty(),
         "board": [],
@@ -227,6 +245,7 @@ def init_state():
     return state
 
 def play():
+    """main game loop"""
     os.system(CLEAR)
     msg("Welcome to Tic Tac Toe")
     state = init_state()
