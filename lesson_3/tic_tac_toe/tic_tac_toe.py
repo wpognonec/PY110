@@ -57,17 +57,21 @@ def display_board(board: list):
     print('')
 
 def display_winner(state: dict):
+    """display the winner of the game and update score"""
     winner = get_winner(state["board"])
     if winner:
         sym = "X" if winner == X else "O"
-        msg(f"{sym} has won the game!")
         state[f"{"x" if winner == X else "o"}_wins"] += 1
+        if state[f"{"x" if winner == X else "o"}_wins"] == 5:
+            msg(g(f"{sym} has won the match!"))
+        else:
+            msg(f"{sym} has won the game!")
     else:
         msg("The game is a tie!")
+    display_stats(state)
 
 def display_stats(state: dict):
     """displays the wins and losses at the end of the match"""
-    os.system(CLEAR)
     msg(f"You played {state["game_number"]} games!")
     msg(f"You won {state["x_wins"]} games!")
     msg(f"Computer won {state["o_wins"]} games!")
@@ -209,35 +213,6 @@ def get_difficulty():
         os.system(CLEAR)
         msg("That was not a valid choice.")
 
-def play_round(state: dict):
-    """plays a round of tic tac toe"""
-    valid_choices = get_valid_choices(state["board"])
-    if state["player"] == O:
-        choice = get_computer_choice(valid_choices, state)
-        state["board"][choice] = state["player"]
-        state["player"] = X
-    else:
-        choice = get_player_choice(valid_choices, state["board"])
-        state["board"][choice] = state["player"]
-        state["player"] = O
-
-def play_again(state: dict):
-    """returns True is user wants to play again, False otherwise"""
-    while state["game_number"] > 0:
-        msg("Play again?")
-        msg(f"{g(1)}: Yes")
-        msg(f"{g(2)}: No")
-        answer = input("==> ")
-        if answer == "2":
-            msg("Thanks for playing!")
-            return False
-        if answer == "1":
-            return True
-        os.system(CLEAR)
-        display_board(state["board"])
-        msg("That was not a valid choice.")
-    return True
-
 def init_board():
     """returns an empty board"""
     return [B for _ in range(9)]
@@ -254,16 +229,54 @@ def init_state():
     }
     return state
 
-# def reset_match_state(state: dict):
-#     state["x_wins"] = 0
-#     state["o_wins"] = 0
-#     state["game_number"] = 0
-
 def reset_game_state(state: dict):
     """reset state for new game"""
     state["game_number"] += 1
     state["board"] = init_board()
     state["player"] = X
+
+def play_again():
+    """returns True if user wants to play again"""
+    while True:
+        os.system(CLEAR)
+        msg("Would you like to play another match?")
+        msg(f"{g(1)}: Yes")
+        msg(f"{g(2)}: No")
+        answer = input("==> ")
+        if answer == "2":
+            return False
+        if answer == "1":
+            return True
+        msg("Invalid input. Please choose 1 or 2.")
+
+def play_round(state: dict):
+    """plays a round of tic tac toe"""
+    valid_choices = get_valid_choices(state["board"])
+    if state["player"] == O:
+        choice = get_computer_choice(valid_choices, state)
+        state["board"][choice] = state["player"]
+        state["player"] = X
+    else:
+        choice = get_player_choice(valid_choices, state["board"])
+        state["board"][choice] = state["player"]
+        state["player"] = O
+
+def play_game(state: dict):
+    """play a single game of tic tac toe"""
+    while not is_game_done(state):
+        play_round(state)
+        os.system(CLEAR)
+        display_board(state["board"])
+
+def play_match(state: dict):
+    """play a match of tic tac toe"""
+    while state["x_wins"] != 5 and state["o_wins"] != 5:
+        os.system(CLEAR)
+        reset_game_state(state)
+        display_board(state["board"])
+        play_game(state)
+        display_winner(state)
+        input("Press enter to continue")
 
 def main():
     """main game loop"""
@@ -271,28 +284,11 @@ def main():
         os.system(CLEAR)
         msg("Welcome to Tic Tac Toe")
         msg("First to win 5 games wins!")
+
         state = init_state()
-        while play_again(state):
+        play_match(state)
 
-            os.system(CLEAR)
-            reset_game_state(state)
-            display_board(state["board"])
-
-            while not is_game_done(state):
-                play_round(state)
-                os.system(CLEAR)
-                display_board(state["board"])
-
-            display_winner(state)
-            if state["x_wins"] == 5 or state["o_wins"] == 5:
-                break
-
-        display_stats(state)
-        msg("Would you like to play another match?")
-        msg(f"{g(1)}: Yes")
-        msg(f"{g(2)}: No")
-        answer = input("==> ")
-        if answer == "2":
+        if not play_again():
             break
 
 main()
