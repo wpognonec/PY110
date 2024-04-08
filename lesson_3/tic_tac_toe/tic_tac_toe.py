@@ -254,26 +254,45 @@ def init_state():
     }
     return state
 
+# def reset_match_state(state: dict):
+#     state["x_wins"] = 0
+#     state["o_wins"] = 0
+#     state["game_number"] = 0
+
+def reset_game_state(state: dict):
+    """reset state for new game"""
+    state["game_number"] += 1
+    state["board"] = init_board()
+    state["player"] = X
+
 def main():
     """main game loop"""
-    os.system(CLEAR)
-    msg("Welcome to Tic Tac Toe")
-    state = init_state()
-
-    while play_again(state):
+    while True:
         os.system(CLEAR)
-        state["board"] = init_board()
-        state["player"] = X
-        display_board(state["board"])
+        msg("Welcome to Tic Tac Toe")
+        msg("First to win 5 games wins!")
+        state = init_state()
+        while play_again(state):
 
-        while not is_game_done(state):
-            play_round(state)
             os.system(CLEAR)
+            reset_game_state(state)
             display_board(state["board"])
 
-        display_winner(state)
-        state["game_number"] += 1
+            while not is_game_done(state):
+                play_round(state)
+                os.system(CLEAR)
+                display_board(state["board"])
 
-    display_stats(state)
+            display_winner(state)
+            if state["x_wins"] == 5 or state["o_wins"] == 5:
+                break
+
+        display_stats(state)
+        msg("Would you like to play another match?")
+        msg(f"{g(1)}: Yes")
+        msg(f"{g(2)}: No")
+        answer = input("==> ")
+        if answer == "2":
+            break
 
 main()
