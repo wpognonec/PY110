@@ -56,6 +56,15 @@ def display_board(board: list):
     display_row([ASCII[board[i]] for i in range (6,9)], 7)
     print('')
 
+def display_winner(state: dict):
+    winner = get_winner(state["board"])
+    if winner:
+        sym = "X" if winner == X else "O"
+        msg(f"{sym} has won the game!")
+        state[f"{"x" if winner == X else "o"}_wins"] += 1
+    else:
+        msg("The game is a tie!")
+
 def display_stats(state: dict):
     """displays the wins and losses at the end of the match"""
     os.system(CLEAR)
@@ -66,14 +75,7 @@ def display_stats(state: dict):
 def is_game_done(state: dict):
     """returns True if the game is done, False otherwise"""
     winner = get_winner(state["board"])
-    if winner:
-        sym = "X" if winner == X else "O"
-        msg(f"{sym} has won the game!")
-        state[f"{"x" if winner == X else "o"}_wins"] += 1
-        return True
-
-    if is_board_full(state["board"]):
-        msg("The game is a tie!")
+    if winner or is_board_full(state["board"]):
         return True
 
     return False
@@ -82,7 +84,7 @@ def is_board_full(board: list):
     """returns True if board is full, False otherwise"""
     return not board.count(B)
 
-def join_or(choices: list, sep: str = ", ", end="or"):
+def join_or(choices: list, sep=", ", end="or"):
     """returns a formated string with the valid choices"""
     match len(choices):
         case 0:
@@ -111,7 +113,7 @@ def get_valid_choices(board: list):
     """returns a list of valid moves to make on the board"""
     return [idx for idx, val in enumerate(board) if val == B]
 
-def minimax(board, depth, player):
+def minimax(board: list, depth: int, player: int):
     """finds the best possible move using minimax algorithm"""
     best = [-1, -10 * player]
 
@@ -163,7 +165,7 @@ def get_medium_move(board: list):
     choice = random.choice(valid_choices)
     return choice
 
-def get_hard_move(board: list, depth):
+def get_hard_move(board: list, depth: int):
     """returns a hard difficulty move"""
     return minimax(board, depth, O)[0]
 
@@ -219,7 +221,7 @@ def play_round(state: dict):
         state["board"][choice] = state["player"]
         state["player"] = O
 
-def play_again(state):
+def play_again(state: dict):
     """returns True is user wants to play again, False otherwise"""
     while state["game_number"] > 0:
         msg("Play again?")
@@ -241,7 +243,7 @@ def init_board():
     return [B for _ in range(9)]
 
 def init_state():
-    """initializes and returns the starting state of the game"""
+    """returns the starting state of the game"""
     state = {
         "difficulty": get_difficulty(),
         "board": [],
@@ -269,6 +271,7 @@ def main():
             os.system(CLEAR)
             display_board(state["board"])
 
+        display_winner(state)
         state["game_number"] += 1
 
     display_stats(state)
