@@ -1,31 +1,31 @@
 import random
 import os
 
-def b(text: str):
+def blue(text: str):
     """returns string in blue"""
     return f"\x1b[0;34;1m{text}\x1b[0m"
 
-def r(text: str):
+def red(text: str):
     """returns string in red"""
     return f"\x1b[0;31;1m{text}\x1b[0m"
 
-def g(text: str):
+def green(text: str):
     """returns string in green"""
     return f"\x1b[0;32;1m{text}\x1b[0m"
 
-X, O, B = 1, -1, 0
+X, O, EMPTY = 1, -1, 0
 ASCII = {
-    -1: [b(" █████ "),
-         b("██   ██"),
-         b("██   ██"),
-         b("██   ██"),
-         b(" █████ ")],
+    -1: [blue(" █████ "),
+         blue("██   ██"),
+         blue("██   ██"),
+         blue("██   ██"),
+         blue(" █████ ")],
 
-    1: [r("██   ██"),
-        r(" ██ ██ "),
-        r("  ███  "),
-        r(" ██ ██ "),
-        r("██   ██")],
+    1: [red("██   ██"),
+        red(" ██ ██ "),
+        red("  ███  "),
+        red(" ██ ██ "),
+        red("██   ██")],
 
     0: [" " * 7 for _ in range(7)]
 }
@@ -40,9 +40,9 @@ def display_row(row: list, box_num: int):
     for i in range(5):
         if not i:
             print(
-                f"{g(box_num)} {row[0][i]}  │"+
-                f"{g(box_num+1)} {row[1][i]}  │"+
-                f"{g(box_num+2)} {row[2][i]}")
+                f"{green(box_num)} {row[0][i]}  │"+
+                f"{green(box_num+1)} {row[1][i]}  │"+
+                f"{green(box_num+2)} {row[2][i]}")
         else:
             print(f"  {row[0][i]}  │  {row[1][i]}  │  {row[2][i]}")
 
@@ -63,7 +63,7 @@ def display_winner(state: dict):
         sym = "X" if winner == X else "O"
         state[f"{"x" if winner == X else "o"}_wins"] += 1
         if state[f"{"x" if winner == X else "o"}_wins"] == 5:
-            msg(g(f"{sym} has won the match!"))
+            msg(green(f"{sym} has won the match!"))
         else:
             msg(f"{sym} has won the game!")
     else:
@@ -77,7 +77,6 @@ def display_stats(state: dict):
     msg(f"Computer won {state["o_wins"]} games!")
 
 def is_game_done(state: dict):
-    """returns True if the game is done, False otherwise"""
     winner = get_winner(state["board"])
     if winner or is_board_full(state["board"]):
         return True
@@ -85,8 +84,7 @@ def is_game_done(state: dict):
     return False
 
 def is_board_full(board: list):
-    """returns True if board is full, False otherwise"""
-    return not board.count(B)
+    return not board.count(EMPTY)
 
 def join_or(choices: list, sep=", ", end="or"):
     """returns a formated string with the valid choices"""
@@ -94,10 +92,10 @@ def join_or(choices: list, sep=", ", end="or"):
         case 0:
             return ""
         case 1:
-            return f"Valid choice: {g(choices[0]+1)}"
+            return f"Valid choice: {green(choices[0]+1)}"
         case _:
-            joined = sep.join(g(str(num+1)) for num in choices[:-1])
-            return f"Valid choices: {joined}{sep}{end} {g(choices[-1]+1)}"
+            joined = sep.join(green(str(num+1)) for num in choices[:-1])
+            return f"Valid choices: {joined}{sep}{end} {green(choices[-1]+1)}"
 
 def get_winner(board: list):
     """returns the winner or 0 if there is no winner"""
@@ -115,7 +113,7 @@ def get_winner(board: list):
 
 def get_valid_choices(board: list):
     """returns a list of valid moves to make on the board"""
-    return [idx for idx, val in enumerate(board) if val == B]
+    return [idx for idx, val in enumerate(board) if val == EMPTY]
 
 def minimax(board: list, depth: int, player: int):
     """finds the best possible move using minimax algorithm"""
@@ -131,7 +129,7 @@ def minimax(board: list, depth: int, player: int):
     for choice in get_valid_choices(board):
         board[choice] = player
         score = minimax(board, depth - 1, -player)
-        board[choice] = B
+        board[choice] = EMPTY
         score[0] = choice
 
         if player == O:
@@ -155,13 +153,13 @@ def get_medium_move(board: list):
         board[choice] = O
         if get_winner(board) == O:
             return choice
-        board[choice] = B
+        board[choice] = EMPTY
 
     for choice in valid_choices:
         board[choice] = X
         if get_winner(board) == X:
             return choice
-        board[choice] = B
+        board[choice] = EMPTY
 
     if 4 in valid_choices:
         return 4
@@ -172,17 +170,6 @@ def get_medium_move(board: list):
 def get_hard_move(board: list, depth: int):
     """returns a hard difficulty move"""
     return minimax(board, depth, O)[0]
-
-def get_player_choice(valid_choices: list, board: list):
-    """returns a move for the player"""
-    while True:
-        msg(join_or(valid_choices))
-        choice = input("==> Choose an empty square: ")
-        if choice.isdigit() and int(choice) - 1 in valid_choices:
-            return int(choice) - 1
-        os.system(CLEAR)
-        display_board(board)
-        msg("That is not a valid choice, please try again")
 
 def get_computer_choice(valid_choices: list, state: dict):
     """returns a move for the computer"""
@@ -195,7 +182,32 @@ def get_computer_choice(valid_choices: list, state: dict):
             choice = get_hard_move(state["board"], len(valid_choices))
     return choice
 
-def get_difficulty():
+def input_player_choice(valid_choices: list, board: list):
+    """returns a move for the player"""
+    while True:
+        msg(join_or(valid_choices))
+        choice = input("==> Choose an empty square: ")
+        if choice.isdigit() and int(choice) - 1 in valid_choices:
+            return int(choice) - 1
+        os.system(CLEAR)
+        display_board(board)
+        msg("That is not a valid choice, please try again")
+
+def input_play_again():
+    """returns True if user wants to play again"""
+    while True:
+        os.system(CLEAR)
+        msg("Would you like to play another match?")
+        msg(f"{green(1)}: Yes")
+        msg(f"{green(2)}: No")
+        answer = input("==> ")
+        if answer == "2":
+            return False
+        if answer == "1":
+            return True
+        msg("Invalid input. Please choose 1 or 2.")
+
+def input_difficulty():
     """asks user for game difficulty"""
     while True:
         diff = {
@@ -204,9 +216,9 @@ def get_difficulty():
             "3": "hard"
         }
         msg("Please choose the game difficulty:")
-        msg(f"{g(1)}: Easy")
-        msg(f"{g(2)}: Medium")
-        msg(f"{g(3)}: Hard")
+        msg(f"{green(1)}: Easy")
+        msg(f"{green(2)}: Medium")
+        msg(f"{green(3)}: Hard")
         choice = input("==> ")
         if choice in diff:
             return diff[choice]
@@ -215,12 +227,12 @@ def get_difficulty():
 
 def init_board():
     """returns an empty board"""
-    return [B for _ in range(9)]
+    return [EMPTY for _ in range(9)]
 
 def init_state():
     """returns the starting state of the game"""
     state = {
-        "difficulty": get_difficulty(),
+        "difficulty": input_difficulty(),
         "board": [],
         "player": X,
         "game_number": 0,
@@ -235,20 +247,6 @@ def reset_game_state(state: dict):
     state["board"] = init_board()
     state["player"] = X
 
-def play_again():
-    """returns True if user wants to play again"""
-    while True:
-        os.system(CLEAR)
-        msg("Would you like to play another match?")
-        msg(f"{g(1)}: Yes")
-        msg(f"{g(2)}: No")
-        answer = input("==> ")
-        if answer == "2":
-            return False
-        if answer == "1":
-            return True
-        msg("Invalid input. Please choose 1 or 2.")
-
 def play_round(state: dict):
     """plays a round of tic tac toe"""
     valid_choices = get_valid_choices(state["board"])
@@ -257,7 +255,7 @@ def play_round(state: dict):
         state["board"][choice] = state["player"]
         state["player"] = X
     else:
-        choice = get_player_choice(valid_choices, state["board"])
+        choice = input_player_choice(valid_choices, state["board"])
         state["board"][choice] = state["player"]
         state["player"] = O
 
@@ -288,7 +286,8 @@ def main():
         state = init_state()
         play_match(state)
 
-        if not play_again():
+        if not input_play_again():
+            msg("Thank you for playing!")
             break
 
 main()
