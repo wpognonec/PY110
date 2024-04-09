@@ -195,8 +195,8 @@ def input_player_choice(valid_choices: list, board: list):
 
 def input_play_again():
     """returns True if user wants to play again"""
+    os.system(CLEAR)
     while True:
-        os.system(CLEAR)
         msg("Would you like to play another match?")
         msg(f"{green(1)}: Yes")
         msg(f"{green(2)}: No")
@@ -205,6 +205,7 @@ def input_play_again():
             return False
         if answer == "1":
             return True
+        os.system(CLEAR)
         msg("Invalid input. Please choose 1 or 2.")
 
 def input_difficulty():
