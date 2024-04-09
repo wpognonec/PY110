@@ -80,7 +80,7 @@ def display_totals(player, dealer):
     msg(f"The dealer has {dealer_total}")
     msg(f"You have {player_total}")
 
-def display_round(player, dealer, hidden=False):
+def display_cards(player, dealer, hidden=False):
     os.system(CLEAR)
     msg("Dealer Cards:")
     display_hand(dealer, hidden=hidden)
@@ -92,53 +92,73 @@ def display_round(player, dealer, hidden=False):
         display_totals(player, dealer)
 
 def display_winner(player, dealer):
-    if total_cards(dealer) > 21:
+    dealer_total = total_cards(dealer["hand"])
+    player_total = total_cards(player["hand"])
+
+    if dealer_total > 21:
         msg("Dealer busted! You Win!")
-    elif total_cards(dealer) == total_cards(player):
+        player["money"] += player["bet"] * 1.5
+    elif player_total > 21:
+        msg("You busted! Dealer Wins!")
+        player["money"] -= player["bet"]
+    elif dealer_total == player_total:
         msg("This round is a tie!")
-    elif total_cards(dealer) > total_cards(player):
+    elif dealer_total > player_total:
         msg("Dealer Wins!")
+        player["money"] -= player["bet"]
     else:
         msg("You Win!")
+        player["money"] += player["bet"] * 1.5
 
 def play_again(game_number):
     if game_number:
         return input("==> Would you like to play again? (y / n)") == "y"
     return True
 
+def get_bet(money: int):
+    while True:
+        bet = int(input(
+            f"==> You have {money}$. How much would you like to bet? "
+            ))
+        if bet <= money:
+            return bet
+        msg("You do not have enough for that bet.")
+
+def player_turn(player):
+    player_total = total_cards(player["hand"])
+    if player_total > 20 or not hit_or_stay():
+        return False
+    return True
+
 def game():
     game_number = 0
+    player = {
+        "hand": [],
+        "money": 500,
+        "bet": 0
+    }
+    dealer = {"hand": []}
     while play_again(game_number):
         deck = generate_deck()
-        player = {"hand": deal_cards(deck, 2)}
-        dealer = {"hand": deal_cards(deck, 2)}
+        player["bet"] = get_bet(player["money"])
+        player["hand"] = deal_cards(deck, 2)
+        dealer["hand"] = deal_cards(deck, 2)
+        display_cards(player["hand"], dealer["hand"], hidden=True)
 
-        display_round(player["hand"], dealer["hand"], hidden=True)
-        player_total = total_cards(player["hand"])
-        if total_cards(player["hand"]) == 21:
-            msg("You win!")
-        else:
-            while hit_or_stay():
-                player["hand"].extend(deal_cards(deck, 1))
-                display_round(player["hand"], dealer["hand"], hidden=True)
-                player_total = total_cards(player["hand"])
-                if player_total > 21:
-                    msg("You busted! Dealer wins!")
-                    break
-                if player_total == 21:
-                    msg("You win!")
-                    break
+        while player_turn(player):
+            player["hand"].extend(deal_cards(deck, 1))
+            display_cards(player["hand"], dealer["hand"], hidden=True)
 
         if total_cards(player["hand"]) < 21:
             time.sleep(1)
-            display_round(player["hand"], dealer["hand"])
+            display_cards(player["hand"], dealer["hand"])
 
             while total_cards(dealer["hand"]) < 17:
                 time.sleep(1)
                 dealer["hand"].extend(deal_cards(deck, 1))
-                display_round(player["hand"], dealer["hand"])
+                display_cards(player["hand"], dealer["hand"])
 
-            display_winner(player["hand"], dealer["hand"])
+        display_winner(player, dealer)
         game_number += 1
 
 game()
