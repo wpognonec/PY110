@@ -95,11 +95,14 @@ def get_hand_total(cards: list):
             total += 1
     return total
 
-def deal_cards(deck: list, num: int):
-    cards = []
+def reset_hands(hands: list[list]):
+    for hand in hands:
+        hand.clear()
+
+
+def deal_cards(hand: list, deck: list, num: int):
     for _ in range(num):
-        cards.append(deck.pop())
-    return cards
+        hand.append(deck.pop())
 
 def input_hit_or_stay():
     while True:
@@ -112,7 +115,7 @@ def input_hit_or_stay():
 
 def input_play_again(game_number):
     if game_number:
-        return input("==> Would you like to play again? (y / n)") == "y"
+        return input("==> Would you like to play again (y / n)? ") == "y"
     return True
 
 def input_bet(money: int):
@@ -136,17 +139,20 @@ def main():
         "hand": [],
         "money": 500,
         "bet": 0
-    }
-    dealer = {"hand": []}
+        }
+    dealer = {
+        "hand": []
+        }
     while input_play_again(game_number):
         deck = init_deck()
+        reset_hands([player["hand"], dealer["hand"]])
         player["bet"] = input_bet(player["money"])
-        player["hand"] = deal_cards(deck, 2)
-        dealer["hand"] = deal_cards(deck, 2)
+        deal_cards(player["hand"], deck, 2)
+        deal_cards(dealer["hand"], deck, 2)
         display_cards(player["hand"], dealer["hand"], hidden=True)
 
         while is_player_turn(player):
-            player["hand"].extend(deal_cards(deck, 1))
+            deal_cards(player["hand"], deck, 1)
             display_cards(player["hand"], dealer["hand"], hidden=True)
 
         if get_hand_total(player["hand"]) < 21:
@@ -155,7 +161,7 @@ def main():
 
             while get_hand_total(dealer["hand"]) < 17:
                 time.sleep(1)
-                dealer["hand"].extend(deal_cards(deck, 1))
+                deal_cards(dealer["hand"], deck, 1)
                 display_cards(player["hand"], dealer["hand"])
 
         display_winner(player, dealer)
