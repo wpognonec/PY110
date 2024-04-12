@@ -104,11 +104,9 @@ def get_winner(board: list):
         [0,3,6], [1,4,7], [2,5,8],
         [0,4,8], [6,4,2]
     ]
-    for combo in win_combos:
-        if all(board[i] == X for i in combo):
-            return X
-        if all(board[i] == O for i in combo):
-            return O
+    for player in [X, O]:
+        if any(all(board[i] == player for i in combo) for combo in win_combos):
+            return player
     return 0
 
 def get_valid_choices(board: list):
