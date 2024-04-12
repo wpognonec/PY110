@@ -115,29 +115,22 @@ def get_valid_choices(board: list):
     """returns a list of valid moves to make on the board"""
     return [idx for idx, val in enumerate(board) if val == EMPTY]
 
-def minimax(board: list, depth: int, player: int):
+def minimax(board: list, player: int):
     """finds the best possible move using minimax algorithm"""
-    best = [-1, -10 * player]
-
-    if depth == 9:
-        return best
+    best = [-1, -player]
 
     winner = get_winner(board)
-    if depth == 0 or (is_board_full(board) or winner):
+    if is_board_full(board) or winner:
         return [-1, winner]
 
     for choice in get_valid_choices(board):
         board[choice] = player
-        score = minimax(board, depth - 1, -player)
+        score = minimax(board, -player)
         board[choice] = EMPTY
         score[0] = choice
 
-        if player == O:
-            if score[1] < best[1]:
-                best = score
-        else:
-            if score[1] > best[1]:
-                best = score
+        get = min if player == O else max
+        best = get(score, best, key=lambda x: x[1])
 
     return best
 
@@ -167,9 +160,9 @@ def get_medium_move(board: list):
     choice = random.choice(valid_choices)
     return choice
 
-def get_hard_move(board: list, depth: int):
+def get_hard_move(board: list):
     """returns a hard difficulty move"""
-    return minimax(board, depth, O)[0]
+    return minimax(board, O)[0]
 
 def get_computer_choice(valid_choices: list, state: dict):
     """returns a move for the computer"""
@@ -179,7 +172,7 @@ def get_computer_choice(valid_choices: list, state: dict):
         case "medium":
             choice = get_medium_move(state["board"])
         case "hard":
-            choice = get_hard_move(state["board"], len(valid_choices))
+            choice = get_hard_move(state["board"])
     return choice
 
 def input_player_choice(valid_choices: list, board: list):
