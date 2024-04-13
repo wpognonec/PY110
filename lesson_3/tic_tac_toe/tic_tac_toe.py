@@ -88,14 +88,13 @@ def is_board_full(board: list):
 
 def join_or(choices: list, sep=", ", end="or"):
     """returns a formated string with the valid choices"""
-    match len(choices):
-        case 0:
-            return ""
-        case 1:
-            return f"Valid choice: {green(choices[0]+1)}"
-        case _:
-            joined = sep.join(green(str(num+1)) for num in choices[:-1])
-            return f"Valid choices: {joined}{sep}{end} {green(choices[-1]+1)}"
+    choices = [green(str(choice + 1)) for choice in choices]
+    if not choices:
+        return ""
+    if len(choices) == 1:
+        return f"Valid choice: {green(choices[0])}"
+    choices[-1] = f"{end} {choices[-1]}"
+    return f"Valid choices: {sep.join(choices)}"
 
 def get_winner(board: list):
     """returns the winner or 0 if there is no winner"""
@@ -140,23 +139,17 @@ def get_medium_move(board: list):
     """returns a medium difficulty move"""
     valid_choices = get_valid_choices(board)
 
-    for choice in valid_choices:
-        board[choice] = O
-        if get_winner(board) == O:
-            return choice
-        board[choice] = EMPTY
-
-    for choice in valid_choices:
-        board[choice] = X
-        if get_winner(board) == X:
-            return choice
-        board[choice] = EMPTY
+    for player in [O, X]:
+        for choice in valid_choices:
+            board[choice] = player
+            if get_winner(board) == player:
+                return choice
+            board[choice] = EMPTY
 
     if 4 in valid_choices:
         return 4
 
-    choice = random.choice(valid_choices)
-    return choice
+    return random.choice(valid_choices)
 
 def get_hard_move(board: list):
     """returns a hard difficulty move"""
@@ -164,14 +157,12 @@ def get_hard_move(board: list):
 
 def get_computer_choice(valid_choices: list, state: dict):
     """returns a move for the computer"""
-    match state["difficulty"]:
-        case "easy":
-            choice = get_easy_move(valid_choices)
-        case "medium":
-            choice = get_medium_move(state["board"])
-        case "hard":
-            choice = get_hard_move(state["board"])
-    return choice
+    diff_map = {
+        "easy": lambda: get_easy_move(valid_choices),
+        "medium": lambda: get_medium_move(state["board"]),
+        "hard": lambda: get_hard_move(state["board"])
+    }
+    return diff_map[state["difficulty"]]()
 
 def input_player_choice(valid_choices: list, board: list):
     """returns a move for the player"""
@@ -192,28 +183,25 @@ def input_play_again():
         msg(f"{green(1)}: Yes")
         msg(f"{green(2)}: No")
         answer = input("==> ")
-        if answer == "2":
-            return False
-        if answer == "1":
-            return True
+        if answer in ("1", "2"):
+            return answer == "1"
         os.system(CLEAR)
         msg("Invalid input. Please choose 1 or 2.")
 
 def input_difficulty():
     """asks user for game difficulty"""
     while True:
-        diff = {
+        diffs = {
             "1": "easy",
             "2": "medium",
             "3": "hard"
         }
         msg("Please choose the game difficulty:")
-        msg(f"{green(1)}: Easy")
-        msg(f"{green(2)}: Medium")
-        msg(f"{green(3)}: Hard")
+        for idx, diff in diffs.items():
+            msg(f"{green(idx)}: {diff.title()}")
         choice = input("==> ")
-        if choice in diff:
-            return diff[choice]
+        if choice in diffs:
+            return diffs[choice]
         os.system(CLEAR)
         msg("That was not a valid choice.")
 
