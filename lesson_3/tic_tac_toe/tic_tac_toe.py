@@ -60,9 +60,9 @@ def display_winner(state: dict):
     """display the winner of the game and update score"""
     winner = get_winner(state["board"])
     if winner:
-        sym = "X" if winner == X else "O"
-        state[f"{"x" if winner == X else "o"}_wins"] += 1
-        if state[f"{"x" if winner == X else "o"}_wins"] == 5:
+        sym = 'X' if winner == X else 'O'
+        state[f"{'x' if winner == X else 'o'}_wins"] += 1
+        if state[f"{'x' if winner == X else 'o'}_wins"] == 5:
             msg(green(f"{sym} has won the match!"))
         else:
             msg(f"{sym} has won the game!")
@@ -72,9 +72,9 @@ def display_winner(state: dict):
 
 def display_stats(state: dict):
     """displays the wins and losses at the end of the match"""
-    msg(f"You played {state["game_number"]} games!")
-    msg(f"You won {state["x_wins"]} games!")
-    msg(f"Computer won {state["o_wins"]} games!")
+    msg(f"You played {state['game_number']} games!")
+    msg(f"You won {state['x_wins']} games!")
+    msg(f"Computer won {state['o_wins']} games!")
 
 def is_game_done(state: dict):
     winner = get_winner(state["board"])
